@@ -1,0 +1,20 @@
+[
+  {
+    "id": "01",
+    "dims": "38\" x 34\" x 3\"",
+    "glb": "models/01.glb",
+    "usdz": ""
+  },
+  {
+    "id": "02",
+    "dims": "37\" x 36\" x 4.5\"",
+    "glb": "models/02.glb",
+    "usdz": "models/02.usdz"
+  },
+  {
+    "id": "03",
+    "dims": "54\" x 44\" x 4.5\"",
+    "glb": "models/03.glb",
+    "usdz": "models/03.usdz"
+  }
+]

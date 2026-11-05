@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bighead 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;1,500&display=swap">
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+<style>
+  /* Layout: one column; each 3D piece fills the screen, scroll for the next; #id shows one piece alone */
+  :root {
+    --paper: #ffffff;
+    --ink: #111111;
+    --muted: #6b6a66;
+    --rule: #e6e4df;
+    --stage: #f6f5f2;
+    --dims: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light;
+  }
+  body { margin: 0; }
+  html, body { background: var(--paper); color: var(--ink); }
+  body {
+    font-family: var(--dims);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 64px;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 8px; }
+  nav { display: flex; justify-content: space-between; font-size: 17px; letter-spacing: 0.02em; }
+  a { color: var(--ink); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .piece { display: grid; gap: 10px; scroll-margin-top: 0; }
+  model-viewer {
+    width: 100%;
+    max-width: 100%;
+    height: calc(100vh - 120px);
+    height: calc(100svh - 120px);
+    min-height: 360px;
+    background: transparent;
+    --poster-color: var(--stage);
+    --progress-bar-color: var(--ink);
+    --progress-bar-height: 2px;
+  }
+  .dims {
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .ar { font-size: 22px; font-style: italic; display: inline-block; padding: 6px 0; cursor: pointer; background: none; border: 0; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; color: var(--ink); font-family: var(--dims); text-align: left; }
+  .ar-off { font-size: 17px; font-style: italic; color: var(--muted); }
+  .meta { display: grid; gap: 2px; justify-items: start; }
+  .hint {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+    pointer-events: none; transition: opacity .6s;
+  }
+  .viewer-box { position: relative; }
+  .zoom {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .zoom button {
+    width: 36px; height: 36px; border: 0; background: none; cursor: pointer;
+    font-family: var(--dims); font-size: 26px; line-height: 1; color: var(--ink);
+  }
+  .zoom .track { width: 36px; height: 170px; position: relative; }
+  .zoom input {
+    position: absolute; left: 50%; top: 50%; width: 170px; margin: 0;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    accent-color: var(--ink); touch-action: none; cursor: pointer;
+  }
+  .zoom :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .hint.gone { opacity: 0; }
+  .all { font-size: 19px; }
+  .empty { color: var(--muted); font-size: 18px; }
+  @media (prefers-reduced-motion: reduce) { .hint { transition: none; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a href="https://bighead.life">&larr; bighead.life</a>
+    <a href="#" id="allTop" hidden>see them all</a>
+  </nav>
+  <main id="list" aria-live="polite"></main>
+</div>
+
+<script>
+(() => {
+  const list = document.getElementById('list');
+  const allTop = document.getElementById('allTop');
+  let pieces = [];
+  // Zoom: START is the opening distance (percent of model-viewer's automatic framing).
+  const START = 88, SPREAD = 1.25;
+  const radiusFor = v => START * Math.pow(2, (50 - v) / 50 * SPREAD);   // slider 0..100 -> radius %
+  const sliderFor = r => 50 - Math.log2(r / START) * 50 / SPREAD;
+
+  function zoomBar(mv, id) {
+    const bar = document.createElement('div');
+    bar.className = 'zoom';
+    const plus = document.createElement('button');
+    plus.type = 'button'; plus.textContent = '+'; plus.setAttribute('aria-label', 'Bigger');
+    const minus = document.createElement('button');
+    minus.type = 'button'; minus.textContent = '\u2212'; minus.setAttribute('aria-label', 'Smaller');
+    const track = document.createElement('div');
+    track.className = 'track';
+    const range = document.createElement('input');
+    range.type = 'range'; range.min = '0'; range.max = '100'; range.step = '1'; range.value = '50';
+    range.id = 'zoom-' + id; range.setAttribute('aria-label', 'Size');
+    track.appendChild(range);
+    bar.append(plus, track, minus);
+
+    let autoR = null;
+    const set = v => {
+      range.value = String(Math.max(0, Math.min(100, v)));
+      const o = mv.getCameraOrbit();
+      mv.cameraOrbit = o.theta + 'rad ' + o.phi + 'rad ' + radiusFor(+range.value).toFixed(1) + '%';
+    };
+    range.addEventListener('input', () => set(+range.value));
+    plus.addEventListener('click', () => set(+range.value + 12));
+    minus.addEventListener('click', () => set(+range.value - 12));
+    mv.addEventListener('load', () => requestAnimationFrame(() => {
+      autoR = mv.getCameraOrbit().radius / (START / 100);
+    }));
+    // Keep the bar in step when someone pinches instead.
+    mv.addEventListener('camera-change', e => {
+      if (e.detail.source !== 'user-interaction' || !autoR) return;
+      range.value = String(Math.round(sliderFor(mv.getCameraOrbit().radius / autoR * 100)));
+    });
+    return bar;
+  }
+
+  function viewer(p, solo) {
+    const mv = document.createElement('model-viewer');
+    mv.setAttribute('src', p.glb);
+    if (p.usdz) mv.setAttribute('ios-src', p.usdz);
+    if (p.poster) mv.setAttribute('poster', p.poster);
+    mv.setAttribute('alt', 'Bighead sculpture, ' + p.dims);
+    mv.setAttribute('camera-controls', '');
+    mv.setAttribute('camera-orbit', '0deg 85deg ' + START + '%');
+    mv.setAttribute('min-camera-orbit', 'auto auto 30%');
+    mv.setAttribute('max-camera-orbit', 'auto auto 230%');
+    mv.setAttribute('shadow-intensity', '1');
+    mv.setAttribute('shadow-softness', '0.8');
+    mv.setAttribute('exposure', '1.05');
+    mv.setAttribute('interaction-prompt', 'none');
+    mv.setAttribute('ar', '');
+    mv.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+    mv.setAttribute('ar-scale', 'fixed');
+    mv.setAttribute('ar-placement', 'floor');
+    if (!solo) {
+      mv.setAttribute('loading', 'lazy');
+      mv.setAttribute('touch-action', 'pan-y');
+      mv.setAttribute('disable-pan', '');
+    }
+    return mv;
+  }
+
+  function block(p, i, solo) {
+    const sec = document.createElement('section');
+    sec.className = 'piece';
+    sec.id = solo ? '' : 'piece-' + p.id;
+
+    const box = document.createElement('div');
+    box.className = 'viewer-box';
+    const mv = viewer(p, solo);
+    box.append(mv, zoomBar(mv, (solo ? 'solo-' : '') + p.id));
+    if (!solo) {
+      // Two-finger scrolling and the mouse wheel scroll the page instead of zooming.
+      // Trackpad pinch (sent as ctrl + wheel) and phone pinch still zoom the piece.
+      box.addEventListener('wheel', e => { if (!e.ctrlKey) e.stopPropagation(); }, { capture: true });
+    }
+    if (i === 0) {
+      const hint = document.createElement('div');
+      hint.className = 'hint';
+      hint.textContent = 'drag to turn';
+      box.appendChild(hint);
+      mv.addEventListener('camera-change', e => {
+        if (e.detail.source === 'user-interaction') hint.classList.add('gone');
+      });
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const dims = document.createElement('div');
+    dims.className = 'dims';
+    dims.textContent = p.dims;
+
+    const ar = document.createElement('button');
+    ar.type = 'button';
+    ar.className = 'ar';
+    ar.textContent = 'see in your space';
+    ar.hidden = true;
+    ar.addEventListener('click', () => mv.activateAR());
+
+    const off = document.createElement('div');
+    off.className = 'ar-off';
+    // Phones that can't open AR here are usually inside another app's browser.
+    off.textContent = matchMedia('(pointer: coarse)').matches
+      ? 'open in Safari or Chrome to see it in your space'
+      : 'open on your phone to see it in your space';
+    off.hidden = true;
+
+    mv.addEventListener('load', () => {
+      ar.hidden = !mv.canActivateAR;
+      off.hidden = mv.canActivateAR;
+    });
+
+    meta.append(dims, ar, off);
+    sec.append(box, meta);
+    return sec;
+  }
+
+  function render() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const one = pieces.find(p => p.id === id);
+    list.replaceChildren();
+    document.body.classList.toggle('solo', !!one);
+    allTop.hidden = !one;
+    const col = document.createElement('div');
+    col.style.display = 'grid';
+    col.style.gap = '40px';
+    if (one) {
+      col.appendChild(block(one, 0, true));
+    } else {
+      pieces.forEach((p, i) => col.appendChild(block(p, i, false)));
+    }
+    list.appendChild(col);
+    window.scrollTo(0, 0);
+  }
+
+  allTop.addEventListener('click', e => { e.preventDefault(); history.replaceState(null, '', location.pathname); render(); });
+  window.addEventListener('hashchange', render);
+
+  fetch('pieces.json')
+    .then(r => r.json())
+    .then(data => Promise.all(data.map(async p => {
+      // Preview only: models stored as base64 text are turned back into GLB files in the browser.
+      const unpack = async (url, type) => {
+        const b64 = (await (await fetch(url)).text()).trim();
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        return URL.createObjectURL(new Blob([bytes], { type }));
+      };
+      if (p.glb.endsWith('.glb.txt')) p.glb = await unpack(p.glb, 'model/gltf-binary');
+      if (p.usdz && p.usdz.endsWith('.usdz.txt')) p.usdz = await unpack(p.usdz, 'model/vnd.usdz+zip');
+      return p;
+    })))
+    .then(data => { pieces = data; render(); })
+    .catch(() => { list.innerHTML = '<p class="empty">The pieces list (pieces.json) did not load. Check that it sits next to this page.</p>'; });
+})();
+</script>
+
+</body>
+</html>
