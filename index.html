@@ -52,6 +52,7 @@
   }
   .ar { font-size: 22px; font-style: italic; display: inline-block; padding: 6px 0; cursor: pointer; background: none; border: 0; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; color: var(--ink); font-family: var(--dims); text-align: left; }
   .ar-off { font-size: 17px; font-style: italic; color: var(--muted); }
+  .instagram-hint { font-size: 16px; color: var(--muted); }
   .meta { display: grid; gap: 2px; justify-items: start; }
   .hint {
     position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
@@ -94,6 +95,7 @@
 (() => {
   const list = document.getElementById('list');
   const allTop = document.getElementById('allTop');
+  const inInstagram = /Instagram/i.test(navigator.userAgent);
   let pieces = [];
   // Zoom: START is the opening distance (percent of model-viewer's automatic framing).
   const START = 88, SPREAD = 1.25;
@@ -198,6 +200,11 @@
     ar.hidden = true;
     ar.addEventListener('click', () => mv.activateAR());
 
+    const instagramHint = document.createElement('div');
+    instagramHint.className = 'instagram-hint';
+    instagramHint.textContent = 'On Instagram: tap ••• → Open in browser';
+    instagramHint.hidden = !inInstagram;
+
     const off = document.createElement('div');
     off.className = 'ar-off';
     // Phones that can't open AR here are usually inside another app's browser.
@@ -207,11 +214,11 @@
     off.hidden = true;
 
     mv.addEventListener('load', () => {
-      ar.hidden = !mv.canActivateAR;
-      off.hidden = mv.canActivateAR;
+      ar.hidden = !inInstagram && !mv.canActivateAR;
+      off.hidden = inInstagram || mv.canActivateAR;
     });
 
-    meta.append(dims, ar, off);
+    meta.append(dims, ar, instagramHint, off);
     sec.append(box, meta);
     return sec;
   }
