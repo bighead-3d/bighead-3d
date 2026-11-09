@@ -29,7 +29,7 @@
     "id": "greenie",
     "name": "Greenie",
     "dims": "37\" x 42\" x 3.5\"",
-    "glb": "models/greenie.glb?v=scaled",
+    "glb": "models/greenie.glb?v=leveled-1",
     "usdz": "",
     "ar": true
   }
