@@ -151,7 +151,7 @@
     mv.setAttribute('shadow-softness', '0.8');
     mv.setAttribute('exposure', '1.05');
     mv.setAttribute('interaction-prompt', 'none');
-    mv.setAttribute('ar', '');
+    if (p.ar !== false) mv.setAttribute('ar', '');
     mv.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
     mv.setAttribute('ar-scale', 'fixed');
     mv.setAttribute('ar-placement', 'floor');
@@ -203,7 +203,7 @@
     const instagramHint = document.createElement('div');
     instagramHint.className = 'instagram-hint';
     instagramHint.textContent = 'On Instagram: tap ••• → Open in browser';
-    instagramHint.hidden = !inInstagram;
+    instagramHint.hidden = p.ar === false || !inInstagram;
 
     const off = document.createElement('div');
     off.className = 'ar-off';
@@ -214,8 +214,8 @@
     off.hidden = true;
 
     mv.addEventListener('load', () => {
-      ar.hidden = !inInstagram && !mv.canActivateAR;
-      off.hidden = inInstagram || mv.canActivateAR;
+      ar.hidden = p.ar === false || (!inInstagram && !mv.canActivateAR);
+      off.hidden = p.ar === false || inInstagram || mv.canActivateAR;
     });
 
     meta.append(dims, ar, instagramHint, off);
@@ -264,3 +264,4 @@
 
 </body>
 </html>
+

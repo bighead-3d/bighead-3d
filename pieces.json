@@ -16,5 +16,21 @@
     "dims": "54\" x 44\" x 4.5\"",
     "glb": "models/03.glb",
     "usdz": "models/03.usdz"
+  },
+  {
+    "id": "rainbow",
+    "name": "Rainbow",
+    "dims": "Rainbow",
+    "glb": "models/rainbow.glb",
+    "usdz": "",
+    "ar": false
+  },
+  {
+    "id": "greenie",
+    "name": "Greenie",
+    "dims": "Greenie",
+    "glb": "models/greenie.glb",
+    "usdz": "",
+    "ar": false
   }
 ]
