@@ -20,17 +20,17 @@
   {
     "id": "rainbow",
     "name": "Rainbow",
-    "dims": "Rainbow",
-    "glb": "models/rainbow.glb",
+    "dims": "35\" x 41\" x 4\"",
+    "glb": "models/rainbow.glb?v=scaled",
     "usdz": "",
-    "ar": false
+    "ar": true
   },
   {
     "id": "greenie",
     "name": "Greenie",
-    "dims": "Greenie",
-    "glb": "models/greenie.glb",
+    "dims": "37\" x 42\" x 3.5\"",
+    "glb": "models/greenie.glb?v=scaled",
     "usdz": "",
-    "ar": false
+    "ar": true
   }
 ]
