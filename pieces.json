@@ -40,5 +40,13 @@
     "glb": "models/white-stucco.glb",
     "usdz": "",
     "ar": true
+  },
+  {
+    "id": "big-white",
+    "name": "Big White",
+    "dims": "58\" x 40\" x 4.5\"",
+    "glb": "models/big-white.glb",
+    "usdz": "",
+    "ar": true
   }
 ]
