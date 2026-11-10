@@ -32,5 +32,13 @@
     "glb": "models/greenie.glb?v=leveled-1",
     "usdz": "",
     "ar": true
+  },
+  {
+    "id": "white-stucco",
+    "name": "White Stucco",
+    "dims": "41\" x 36\" x 3.25\"",
+    "glb": "models/white-stucco.glb",
+    "usdz": "",
+    "ar": true
   }
 ]
