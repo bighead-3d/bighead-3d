@@ -51,7 +51,8 @@
     letter-spacing: 0.02em;
   }
   .ar { font-size: 22px; font-style: italic; display: inline-block; padding: 6px 0; cursor: pointer; background: none; border: 0; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; color: var(--ink); font-family: var(--dims); text-align: left; }
-  .ar-off { font-size: 17px; font-style: italic; color: var(--muted); }
+  .ar[hidden] { display: none; }
+  .ar-off { font-size: 22px; font-style: italic; color: var(--ink); }
   .instagram-hint { font-size: 16px; color: var(--muted); }
   .meta { display: grid; gap: 2px; justify-items: start; }
   .hint {
@@ -85,7 +86,7 @@
 <body>
 <div class="wrap">
   <nav>
-    <a href="https://bighead.life">&larr; bighead.life</a>
+    <a href="https://bighead.life/bigheads">&larr; back to Bighead</a>
     <a href="#" id="allTop" hidden>see them all</a>
   </nav>
   <main id="list" aria-live="polite"></main>
@@ -196,7 +197,7 @@
     const ar = document.createElement('button');
     ar.type = 'button';
     ar.className = 'ar';
-    ar.textContent = 'see in your space';
+    ar.textContent = 'Open on your phone to see it in your space';
     ar.hidden = true;
     ar.addEventListener('click', () => mv.activateAR());
 
@@ -207,10 +208,7 @@
 
     const off = document.createElement('div');
     off.className = 'ar-off';
-    // Phones that can't open AR here are usually inside another app's browser.
-    off.textContent = matchMedia('(pointer: coarse)').matches
-      ? 'open in Safari or Chrome to see it in your space'
-      : 'open on your phone to see it in your space';
+    off.textContent = 'Open on your phone to see it in your space';
     off.hidden = true;
 
     mv.addEventListener('load', () => {
