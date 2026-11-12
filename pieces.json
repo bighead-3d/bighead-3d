@@ -48,5 +48,13 @@
     "glb": "models/big-white.glb?v=proportions-2",
     "usdz": "",
     "ar": true
+  },
+  {
+    "id": "tall-gray",
+    "name": "Tall Gray",
+    "dims": "47\" x 27.65\" x 3.28\"",
+    "glb": "models/tall-gray.glb",
+    "usdz": "",
+    "ar": true
   }
 ]
